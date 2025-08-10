@@ -1,33 +1,44 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/netflix/navbar";
 import HeroSection from "@/components/netflix/hero-section";
 import ContentRow from "@/components/netflix/content-row";
 import CategoryFilter from "@/components/netflix/category-filter";
-import type { Content } from "@shared/schema";
+import { mockApi, type Content } from "@/lib/mockData";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [allContent, setAllContent] = useState<Content[]>([]);
+  const [trendingContent, setTrendingContent] = useState<Content[]>([]);
+  const [netflixOriginals, setNetflixOriginals] = useState<Content[]>([]);
+  const [movies, setMovies] = useState<Content[]>([]);
+  const [tvShows, setTvShows] = useState<Content[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: allContent = [], isLoading } = useQuery<Content[]>({
-    queryKey: ["/api/content"],
-  });
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allData, trending, originals, moviesData, tvData] = await Promise.all([
+          mockApi.getContent(),
+          mockApi.getTrending(),
+          mockApi.getNetflixOriginals(),
+          mockApi.getContentByType('movie'),
+          mockApi.getContentByType('tv'),
+        ]);
 
-  const { data: trendingContent = [] } = useQuery<Content[]>({
-    queryKey: ["/api/trending"],
-  });
+        setAllContent(allData);
+        setTrendingContent(trending);
+        setNetflixOriginals(originals);
+        setMovies(moviesData);
+        setTvShows(tvData);
+      } catch (error) {
+        console.error('Error loading content:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const { data: netflixOriginals = [] } = useQuery<Content[]>({
-    queryKey: ["/api/netflix-originals"],
-  });
-
-  const { data: movies = [] } = useQuery<Content[]>({
-    queryKey: ["/api/content/type/movie"],
-  });
-
-  const { data: tvShows = [] } = useQuery<Content[]>({
-    queryKey: ["/api/content/type/tv"],
-  });
+    loadData();
+  }, []);
 
   const filteredContent = selectedCategory === "all" 
     ? allContent 
