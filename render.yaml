@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: netflix-clone
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: netflix-clone-db
+          property: connectionString
+
+databases:
+  - name: netflix-clone-db
+    databaseName: netflix_clone
+    user: netflix_user
